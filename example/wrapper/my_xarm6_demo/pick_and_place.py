@@ -19,66 +19,84 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../../..'))
 
 from xarm.wrapper import XArmAPI
 
+def xarm_init():
+    arm = XArmAPI("192.168.31.100")
+    time.sleep(0.5)
 
-#######################################################
-"""
-Just for test example
-"""
-if len(sys.argv) >= 2:
-    ip = sys.argv[1]
-else:
-    try:
-        from configparser import ConfigParser
-        parser = ConfigParser()
-        parser.read('../robot.conf')
-        ip = parser.get('xArm', 'ip')
-    except:
-        ip = input('Please input the xArm ip address:')
-        if not ip:
-            print('input error, exit')
-            sys.exit(1)
-########################################################
+    if arm.warn_code != 0:
+        arm.clean_warn()
+    if arm.error_code != 0:
+        arm.clean_error()
 
+    arm.motion_enable(enable=True)
+    arm.set_mode(0)
+    arm.set_state(state=0)
 
-arm = XArmAPI(ip)
-time.sleep(0.5)
-if arm.warn_code != 0:
-    arm.clean_warn()
-if arm.error_code != 0:
-    arm.clean_error()
-arm.motion_enable(enable=True)
-arm.set_mode(0)
-arm.set_state(state=0)
+    return arm
 
-# Gripper Setting
-code = arm.set_gripper_mode(0)
-print('set gripper mode: location mode, code={}'.format(code))
+def xarm_deinit(arm):
+    arm.disconnect()
 
-code = arm.set_gripper_enable(True)
-print('set gripper enable, code={}'.format(code))
+def gripper_init(arm, gripper_speed):
+    code = arm.set_gripper_mode(0)
+    print('set gripper mode: location mode, code={}'.format(code))
 
-code = arm.set_gripper_speed(1000)
-print('set gripper speed, code={}'.format(code))
+    code = arm.set_gripper_enable(True)
+    print('set gripper enable, code={}'.format(code))
 
-speed = 10
+    code = arm.set_gripper_speed(gripper_speed)
+    print('set gripper speed, code={}'.format(code))
 
-# HOME
-arm.set_servo_angle(angle=[0.036784, -33.186798, -27.734135, -0.612721, 61.077812, -0.122728], speed=speed, wait=True, is_radian=False)
-arm.set_gripper_position(500, wait=True)
+def go_home(arm, speed):
+    # HOME
+    arm.set_servo_angle(angle=[0.036784, -33.186798, -27.734135, -0.612721, 61.077812, -0.122728], speed=speed, wait=True, is_radian=False)
 
-# CATCH
-arm.set_servo_angle(angle=[-0.1, 79.9, -109.2, -0.8, 29.4, 0.3], speed=speed, wait=True, is_radian=False)
-arm.set_gripper_position(50, wait=True)
+def go_for_catching(arm, speed):
+    # CATCH
+    arm.set_servo_angle(angle=[-0.1, 79.9, -109.2, -0.8, 29.4, 0.3], speed=speed, wait=True, is_radian=False)
+    
+def gripper_open(arm):
+    arm.set_gripper_position(500, wait=True)
 
-# HOME
-arm.set_servo_angle(angle=[0.036784, -33.186798, -27.734135, -0.612721, 61.077812, -0.122728], speed=speed, wait=True, is_radian=False)
+def gripper_close(arm):
+    arm.set_gripper_position(50, wait=True)
 
-# CATCH
-arm.set_servo_angle(angle=[-0.1, 79.9, -109.2, -0.8, 29.4, 0.3], speed=speed, wait=True, is_radian=False)
-arm.set_gripper_position(500, wait=True)
+###########################################
+###########################################
+def xarm_gripper_init():
+    xarm = xarm_init()
+    gripper_speed = 1000
+    gripper_init(xarm, gripper_speed)
 
-# HOME
-arm.set_servo_angle(angle=[0.036784, -33.186798, -27.734135, -0.612721, 61.077812, -0.122728], speed=speed, wait=True, is_radian=False)
+    return xarm
 
+def xarm_gripper_deinit(arm):
+    xarm_deinit(arm)
 
-arm.disconnect()
+def read_for_pick_and_place(arm, arm_speed):
+    go_home(arm, arm_speed)
+    gripper_open()
+
+def xarm_gripper_pick(arm, arm_speed):
+    go_for_catching(arm, arm_speed)
+    gripper_close()
+    go_home(arm, arm_speed)
+
+def xarm_gripper_place(arm, arm_speed):
+    go_for_catching(arm, arm_speed)
+    gripper_open()
+    go_home(arm, arm_speed)
+
+###########################################
+###########################################
+# Main entry
+###########################################
+if __name__ == "__main__":
+    xarm = xarm_gripper_init()
+
+    xarm_speed = 10
+    read_for_pick_and_place(xarm, xarm_speed)
+    xarm_gripper_pick(xarm, xarm_speed)
+    xarm_gripper_place(xarm, xarm_speed)
+
+    xarm_gripper_deinit(xarm)

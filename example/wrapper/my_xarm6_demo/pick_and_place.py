@@ -75,16 +75,16 @@ def xarm_gripper_deinit(arm):
 
 def read_for_pick_and_place(arm, arm_speed):
     go_home(arm, arm_speed)
-    gripper_open()
+    gripper_open(arm)
 
 def xarm_gripper_pick(arm, arm_speed):
     go_for_catching(arm, arm_speed)
-    gripper_close()
+    gripper_close(arm)
     go_home(arm, arm_speed)
 
 def xarm_gripper_place(arm, arm_speed):
     go_for_catching(arm, arm_speed)
-    gripper_open()
+    gripper_open(arm)
     go_home(arm, arm_speed)
 
 ###########################################

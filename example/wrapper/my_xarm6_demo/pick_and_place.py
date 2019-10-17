@@ -56,10 +56,10 @@ def go_for_catching(arm, speed):
     arm.set_servo_angle(angle=[-0.1, 79.9, -109.2, -0.8, 29.4, 0.3], speed=speed, wait=True, is_radian=False)
     
 def gripper_open(arm):
-    arm.set_gripper_position(500, wait=True)
+    arm.set_gripper_position(850, wait=True)
 
 def gripper_close(arm):
-    arm.set_gripper_position(50, wait=True)
+    arm.set_gripper_position(786, wait=True)
 
 ###########################################
 ###########################################
@@ -80,11 +80,13 @@ def read_for_pick_and_place(arm, arm_speed):
 def xarm_gripper_pick(arm, arm_speed):
     go_for_catching(arm, arm_speed)
     gripper_close(arm)
+    time.sleep(1.5)
     go_home(arm, arm_speed)
 
 def xarm_gripper_place(arm, arm_speed):
     go_for_catching(arm, arm_speed)
     gripper_open(arm)
+    time.sleep(1)
     go_home(arm, arm_speed)
 
 ###########################################
